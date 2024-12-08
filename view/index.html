@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monitoring Hidroponik</title>
+  </head>
+  <body>
+    <h1>Monitoring Hidroponik</h1>
+    <p>
+      <strong>Kelembapan Tanah:</strong>
+      <span id="soil-moisture">Loading...</span>%
+    </p>
+    <p>
+      <strong>Kondisi Kelembapan Tanah:</strong>
+      <span id="soil-condition">Loading...</span>
+    </p>
+    <p>
+      <strong>pH:</strong>
+      <span id="ph">Loading...</span>
+    </p>
+    <p>
+      <strong>Kondisi pH:</strong>
+      <span id="ph-condition">Loading...</span>
+    </p>
+
+    <script>
+      async function fetchData() {
+        try {
+          const response = await fetch("/data"); // Panggil endpoint /data
+          const data = await response.json(); // Konversi respons ke JSON
+
+          // Tampilkan data di halaman
+          document.getElementById("soil-moisture").textContent =
+            data.soil_moisture;
+          document.getElementById("soil-condition").textContent =
+            data.kondisi_soil;
+          document.getElementById("ph").textContent = data.ph;
+          document.getElementById("ph-condition").textContent = data.kondisi_ph;
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+
+      // Ambil data setiap 5 detik
+      setInterval(fetchData, 5000);
+      fetchData(); // Ambil data saat pertama kali halaman dimuat
+    </script>
+  </body>
+</html>
