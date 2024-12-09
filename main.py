@@ -4,6 +4,7 @@ import Adafruit_ADS1x15 as adafruit
 import flask
 from flask import Flask, jsonify
 import threading
+import random
 
 # ! inisialisasi pin / channel module sensor
 pin_soil_moisture = 0
@@ -26,7 +27,16 @@ class monitorHidroponik:
         self.soil_moisture = 0
         self.kondisi_ph = 'Normal' # kondisi default ph
         self.ph = 0
+        self.kalsium = monitorHidroponik.randomizer(0, 100)
+        self.kalium = monitorHidroponik.randomizer(0, 100)
+        self.magnesium = monitorHidroponik.randomizer(0, 100)
+        self.nitrogen = monitorHidroponik.randomizer(0, 100)
         self.running = True
+
+    def randomizer(angka_awal, angka_akhir):
+        angka = random.uniform(angka_awal, angka_akhir)
+        time.sleep(5)
+        return angka
 
     def baca_soilMoist(self):
         nilai_deteksi_soil = adc.read_adc(pin_soil_moisture, gain=1)
@@ -86,7 +96,11 @@ def get_data():
         'soil_moisture': hidroponik.soil_moisture,
         'kondisi_soil': hidroponik.kondisi_soil,
         'ph': hidroponik.ph,
-        'kondisi_ph': hidroponik.kondisi_ph
+        'kondisi_ph': hidroponik.kondisi_ph,
+        'kalsium': hidroponik.kalsium,
+        'kalium': hidroponik.kalium,
+        'magnesium': hidroponik.magnesium,
+        'nitrogen': hidroponik.nitrogen
     })
 
 def main():
