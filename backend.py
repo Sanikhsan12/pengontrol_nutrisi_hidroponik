@@ -22,7 +22,7 @@ def koneksi():
         print(f'gagal terhubung ke database : {e}')
         print(e)
 
-def post_data(data):
+def post_data():
     db = koneksi()
     data = monitorHidroponik()
     if db:
