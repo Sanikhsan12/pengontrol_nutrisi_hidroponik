@@ -34,8 +34,8 @@ class monitorHidroponik:
         self.running = True
 
     def randomizer(angka_awal, angka_akhir):
-        angka = random.uniform(angka_awal, angka_akhir)
         time.sleep(5)
+        angka = random.uniform(angka_awal, angka_akhir)
         return angka
 
     def baca_soilMoist(self):
