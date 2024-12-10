@@ -5,7 +5,7 @@ import flask
 from flask import Flask, jsonify
 import threading
 import random
-from backend import post_data 
+from backend import post_data, koneksi 
 
 # ! inisialisasi pin / channel module sensor
 pin_soil_moisture = 0
@@ -75,6 +75,7 @@ class monitorHidroponik:
             self.ph = self.baca_ph()
 
             print(f'kelembapan tanah: {self.soil_moisture}% dengan kondisi {self.kondisi_soil}, ph: {self.ph} dengan kondisi {self.kondisi_ph}')
+            koneksi()
             post_data()
             time.sleep(5)
 
