@@ -3,48 +3,117 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Monitoring Hidroponik</title>
-  </head>
-  <body>
-    <h1>Monitoring Hidroponik</h1>
-    <p>
-      <strong>Kelembapan Tanah:</strong>
-      <span id="soil-moisture">Loading...</span>%
-    </p>
-    <p>
-      <strong>Kondisi Kelembapan Tanah:</strong>
-      <span id="soil-condition">Loading...</span>
-    </p>
-    <p>
-      <strong>pH:</strong>
-      <span id="ph">Loading...</span>
-    </p>
-    <p>
-      <strong>Kondisi pH:</strong>
-      <span id="ph-condition">Loading...</span>
-    </p>
-
+    <title>Hidroponik Monitoring</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      async function fetchData() {
+      async function updateDashboard() {
         try {
-          const response = await fetch("/data"); // Panggil endpoint /data
-          const data = await response.json(); // Konversi respons ke JSON
+          const response = await fetch("/data");
+          const data = await response.json();
 
-          // Tampilkan data di halaman
           document.getElementById("soil-moisture").textContent =
-            data.soil_moisture;
+            data.soil_moisture.toFixed(1);
           document.getElementById("soil-condition").textContent =
             data.kondisi_soil;
-          document.getElementById("ph").textContent = data.ph;
+          document.getElementById("soil-status-color").className =
+            data.kondisi_soil === "Kering"
+              ? "bg-red-500"
+              : data.kondisi_soil === "Normal"
+              ? "bg-green-500"
+              : data.kondisi_soil === "Basah"
+              ? "bg-blue-500"
+              : "bg-purple-500";
+
+          document.getElementById("ph").textContent = data.ph.toFixed(1);
           document.getElementById("ph-condition").textContent = data.kondisi_ph;
+          document.getElementById("ph-status-color").className =
+            data.kondisi_ph === "Asam"
+              ? "bg-red-500"
+              : data.kondisi_ph === "Basa"
+              ? "bg-purple-500"
+              : "bg-green-500";
+
+          document.getElementById("nutrient-kalsium").textContent =
+            data.kalsium.toFixed(1);
+          document.getElementById("nutrient-kalium").textContent =
+            data.kalium.toFixed(1);
+          document.getElementById("nutrient-magnesium").textContent =
+            data.magnesium.toFixed(1);
+          document.getElementById("nutrient-nitrogen").textContent =
+            data.nitrogen.toFixed(1);
         } catch (error) {
           console.error("Error fetching data:", error);
         }
       }
 
-      // Ambil data setiap 5 detik
-      setInterval(fetchData, 5000);
-      fetchData(); // Ambil data saat pertama kali halaman dimuat
+      setInterval(updateDashboard, 5000);
+
+      document.addEventListener("DOMContentLoaded", updateDashboard);
     </script>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="container mx-auto p-6 bg-white shadow-lg rounded-lg max-w-lg">
+      <h1 class="text-3xl font-bold text-center mb-6 text-green-700">
+        Hidroponik Monitoring
+      </h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-50 p-4 rounded-lg shadow">
+          <h2 class="text-xl font-semibold mb-3">Kelembapan</h2>
+          <div class="flex items-center">
+            <div id="soil-status-color" class="w-4 h-4 mr-3 rounded-full"></div>
+            <div>
+              <p class="font-medium">
+                <span id="soil-moisture">-</span>% |
+                <span id="soil-condition">-</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg shadow">
+          <h2 class="text-xl font-semibold mb-3">pH Level</h2>
+          <div class="flex items-center">
+            <div id="ph-status-color" class="w-4 h-4 mr-3 rounded-full"></div>
+            <div>
+              <p class="font-medium">
+                <span id="ph">-</span> |
+                <span id="ph-condition">-</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <h2 class="text-2xl font-semibold mb-4 text-center">Kadar Nutrisi</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-blue-50 p-3 rounded-lg text-center">
+            <h3 class="font-medium">Kalsium</h3>
+            <p class="text-xl font-bold text-blue-700">
+              <span id="nutrient-kalsium">-</span>
+            </p>
+          </div>
+          <div class="bg-green-50 p-3 rounded-lg text-center">
+            <h3 class="font-medium">Kalium</h3>
+            <p class="text-xl font-bold text-green-700">
+              <span id="nutrient-kalium">-</span>
+            </p>
+          </div>
+          <div class="bg-purple-50 p-3 rounded-lg text-center">
+            <h3 class="font-medium">Magnesium</h3>
+            <p class="text-xl font-bold text-purple-700">
+              <span id="nutrient-magnesium">-</span>
+            </p>
+          </div>
+          <div class="bg-red-50 p-3 rounded-lg text-center">
+            <h3 class="font-medium">Nitrogen</h3>
+            <p class="text-xl font-bold text-red-700">
+              <span id="nutrient-nitrogen">-</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
