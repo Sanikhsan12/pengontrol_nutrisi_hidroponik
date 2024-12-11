@@ -1,73 +1,84 @@
 # library
 import time
-import Adafruit_ADS1x15 as adafruit
 import flask
 from flask import Flask, jsonify
 import threading
 import random
+import RPi.GPIO as GPIO
 from backend import post_data, koneksi as conn
 
-# ! inisialisasi pin / channel module sensor
-pin_soil_moisture = 0
-pin_ph = 1
-
-# ! inisialisasi adc
-# ? untuk membaca nilai hasil deteksi dan dikoneversi dari analog ke digital
-adc = adafruit.ADS1115()
-
-# ! nilai patokan kalibrasi
-soil_moisture_min = 0 # nilai adc kelembapan saat kering
-soil_moisture_max = 26000 # nilai adc kelembapan saat basah
-ph_min = 0 # nilai adc ph terendah
-ph_max = 26000 # nilai adc ph tertinggi
+# ! Pengaturan GPIO
+GPIO.setmode(GPIO.BCM)
+pin_soil_moisture = 17  # * Ganti dengan pin GPIO yang sesuai
+pin_ph = 18  # * Ganti dengan pin GPIO yang sesuai
 
 # * class untuk menyimpan data monitoring
 class monitorHidroponik:
     def __init__(self):
-        self.kondisi_soil = 'Normal' # kondisi default kelembapan tanah
-        self.soil_moisture = 0
-        self.kondisi_ph = 'Normal' # kondisi default ph
-        self.ph = 0
+        GPIO.setup(pin_soil_moisture, GPIO.IN)
+        GPIO.setup(pin_ph, GPIO.IN)
+
+        self.kondisi_soil = 'Normal' # * kondisi default kelembapan tanah
+        self.soil_moisture = 0 # * kelembapan tanah default
+        self.kondisi_ph = 'Normal' # * kondisi default ph
+        self.ph = 0 # * ph default
         self.kalsium = monitorHidroponik.randomizer(0, 100)
         self.kalium = monitorHidroponik.randomizer(0, 100)
         self.magnesium = monitorHidroponik.randomizer(0, 100)
         self.nitrogen = monitorHidroponik.randomizer(0, 100)
         self.running = True
 
+    @staticmethod
     def randomizer(angka_awal, angka_akhir):
         time.sleep(5)
         angka = random.uniform(angka_awal, angka_akhir)
         return angka
 
+    def sampling(self,pin,index_sampling=10,delay=0.5):
+        read=[]
+        for i in range(index_sampling):
+            read.append(GPIO.input(pin))
+            time.sleep(delay)
+        return read
+
     def baca_soilMoist(self):
-        nilai_deteksi_soil = adc.read_adc(pin_soil_moisture, gain=1)
-        nilai_presentasi_soil = 100 - (nilai_deteksi_soil - soil_moisture_min) / (soil_moisture_max - soil_moisture_min) * 100
+        readings = self.sampling(pin_soil_moisture)
+
+        presentasi = (readings.count(GPIO.HIGH) / len(readings)) * 100
 
         # ? kondisi kelembapan tanah
-        if nilai_presentasi_soil <= 30 :
+        if presentasi <= 30 :
             self.kondisi_soil = 'Kering'
-        elif nilai_presentasi_soil > 30 and nilai_presentasi_soil <= 60:
+            self.soil_moisture = 10
+        elif 30 < presentasi <= 60:
             self.kondisi_soil = 'Normal'
-        elif nilai_presentasi_soil > 60 and nilai_presentasi_soil <= 80:
+            self.soil_moisture = 50
+        elif 60 < presentasi <= 80:
             self.kondisi_soil = 'Basah'
+            self.soil_moisture = 70
         else:
             self.kondisi_soil = 'Terlalu Basah'
+            self.soil_moisture = 90
 
-        return max(0, min(100, nilai_presentasi_soil))
-
+        return self.soil_moisture
+    
     def baca_ph(self):
-        nilai_deteksi_ph = adc.read_adc(pin_ph, gain=1)
-        nilai_presentasi_ph = (nilai_deteksi_ph - ph_min) * (14 / (ph_max - ph_min))
+        readings = self.sampling(pin_ph)
+
+        kadar = (readings.count(GPIO.HIGH) / len(readings)) * 100
 
         # ? kondisi ph
-        if nilai_presentasi_ph < 7:
+        if kadar < 7:
             self.kondisi_ph = 'Asam'
-        elif nilai_presentasi_ph > 7:
+            self.ph = 5
+        elif kadar > 7:
             self.kondisi_ph = 'Basa'
+            self.ph = 9
         else:
             self.kondisi_ph = 'Normal'
+            self.ph = 7
 
-        return round(nilai_presentasi_ph, 1)
+        return self.ph
 
     def monitoringSensor(self):
         while self.running:
@@ -83,6 +94,10 @@ class monitorHidroponik:
         monitor = threading.Thread(target=self.monitoringSensor)
         monitor.daemon = True
         monitor.start()
+
+    def __del__(self):
+        # Membersihkan pengaturan GPIO saat objek dihapus
+        GPIO.cleanup()
 
 # ! init flask
 app = Flask(__name__, template_folder='view', static_folder='view')
